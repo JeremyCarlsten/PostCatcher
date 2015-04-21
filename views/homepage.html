@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html ng-app='app'>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+        <title>Home</title>
+        <script rel='text/javascript' src="/angular/angular.js"></script>
+        <link rel='stylesheet' type='text/css' href="/bootstrap/dist/css/bootstrap.css"/>
+    <script type='text/javascript'>
+        var app = angular.module('app', []);
+        
+            app.config(function(){
+                
+            });
+            
+            app.controller('MainController', function($http){
+                var vm = this;
+                vm.postList = {posts:[{mandrill_events: 'No Events Loaded... click update'}]};
+                vm.postCount = 0;
+            
+                vm.clearPostList = function(){
+                    $http.get('http://ujkkb3e60afe.jeremycarlsten.koding.io/clearPostList')
+                        .success(function(data, status, headers, config) {
+                            setupPostList(vm, data);
+                    });
+                }
+                
+                 vm.sendEmails = function(){
+                    $http.get('http://ujkkb3e60afe.jeremycarlsten.koding.io/sendEmails')
+                        .success(function(data, status, headers, config) {
+                            setupPostList(vm, data);
+                    });
+                }
+            
+                vm.getPostList = function(){
+                    $http.get('http://ujkkb3e60afe.jeremycarlsten.koding.io/postList')
+                        .success(function(data, status, headers, config) {
+                            console.log(data);
+                            setupPostList(vm, data);
+                    });
+                };
+            });
+            
+            function setupPostList(viewModel, data){
+              viewModel.postList.posts = data; 
+            //   viewModel.postCount = viewModel.postList.posts.size();
+            }
+    </script>
+    </head>
+    
+    <body ng-controller='MainController as main'>
+        <h1>PostCatcher</h1>
+        <button ng-click='main.getPostList()'>Update Data</button>
+        <button ng-click='main.clearPostList()'>Clear Data</button>
+        <button ng-click='main.sendEmails()'>Send Emails</button>
+        <h3>Recent Posts:</h3>
+            <div ng-repeat='post in main.postList.posts'>
+                <!--<p>Total Posts: {{main.postCount}}</p>-->
+                
+                <ul>
+                    <li class='well' ng-repeat='event in post'>
+                        Event: {{event}}
+                    </li>
+                </ul>
+            </div>
+    </body>
+</html>
