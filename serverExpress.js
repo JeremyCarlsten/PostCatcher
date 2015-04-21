@@ -1,12 +1,15 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 var mailer   = require("mailer");
+var validator = require('mandrill-webhook-validator');
+ 
 // var extend = require('util')._extend;
+var WEBHOOK_URL = 'http://jeremycarlsten.koding.io/post'
 var app = express();
 var postList = [];
-// var fullRequest = {};
+var fullRequest = {};
 
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser());
 app.use(express.static(__dirname + '/node_modules'));
 
 app.get('/', function (request, response) {
@@ -14,10 +17,20 @@ app.get('/', function (request, response) {
     response.sendFile(__dirname + '/views/homepage.html');
 });
 
+app.get('/poster', function (request, response) {
+    console.log("someone visited '/poster' ");
+    response.sendFile(__dirname + '/views/poster.html');
+});
+
 app.post('/post', function(request, response){
-    if(request.headers['x-mandrill-signature'] === 'a0tVc9qrv9KpJZ0/YU43AunPkBc='){
+        fullRequest = request.body;
+        // console.log(request);
+    // if(checkSignature(request.headers['x-mandrill-signature'], request.headers)){
+    var result = validator.makeSignature("Um2XU9D8BAHaFj9YWl9oLg", WEBHOOK_URL, request.body);
+    console.log(result);
+    console.log(request.get('X-Mandrill-Signature'));
+    if(request.get('X-Mandrill-Signature') === result){
         console.log("You've got mail!");
-        // fullRequest = request;
         console.log("posting: " + request.body);
         // var combined = extend(request.body, request.headers);
         postList.push(request.body);
@@ -32,21 +45,30 @@ app.post('/post', function(request, response){
 
 app.get('/postList', function(request, response){
     response.type('JSON');
-    
    response.json(postList);
 });
 
 
-// app.get('/fullRequest', function(request, response){
-//   response.send(fullRequest.headers);
-// });
+function checkSignature(mandrillSignature, params){
+    console.log(params)
+    var calculatedSignature = WEBHOOK_URL  
+    for(var param in params){
+     calculatedSignature += param
+     console.log(calculatedSignature);
+    }
+    
+    mandrillSignature === calculatedSignature
+}
+app.get('/fullRequest', function(request, response){
+  response.send(fullRequest);
+});
 
 app.get('/sendEmails', function(request, response){
     console.log("Sending Email..");
 mailer.send(
   { host:           "smtp.mandrillapp.com"
   , port:           587
-  , to:             "example.someone.abcdefg@exampleEmail.com"
+  , to:             "jeremyNotReallyHere@exampleEmail.com"
   , from:           "you@yourdomain.com"
   , subject:        "Mandrill knows Javascript!"
   , body:           "Hello from NodeJS!"
